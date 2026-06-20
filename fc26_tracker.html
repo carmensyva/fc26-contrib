@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FC26 Contribution Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d10; --surface:#15181d; --surface2:#1c2026; --surface3:#232830;
+    --border:#2a2f37; --border2:#363d47;
+    --text:#e8eaed; --muted:#8b929c; --muted2:#5e656f;
+    --accent:#ff6a1a; --accent-dim:#a8460f;
+    --green:#3ddc84; --gold:#ffc94d; --red:#ff5a5a;
+    --r:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:14px; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+  h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;letter-spacing:-.01em}
+  .mono{font-family:'JetBrains Mono',monospace}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:14px}
+  input,select{font-family:inherit;font-size:14px}
+  ::placeholder{color:var(--muted2)}
+
+  /* ---- Top bar ---- */
+  header{
+    position:sticky;top:0;z-index:20;
+    background:rgba(11,13,16,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    padding:12px 18px;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  }
+  .logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;font-family:'Space Grotesk'}
+  .logo .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  .logo small{color:var(--muted);font-weight:500;font-size:11px;font-family:'JetBrains Mono';letter-spacing:.05em}
+  .spacer{flex:1}
+
+  select.career-pick{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:8px 12px;border-radius:var(--r);min-width:180px;cursor:pointer;
+  }
+  .btn{
+    background:var(--surface2);border:1px solid var(--border);
+    padding:8px 14px;border-radius:var(--r);font-weight:500;
+    display:inline-flex;align-items:center;gap:6px;transition:.15s;
+  }
+  .btn:hover{border-color:var(--border2);background:var(--surface3)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#160a02;font-weight:600}
+  .btn.primary:hover{background:#ff7d36}
+  .btn.ghost{background:transparent}
+  .btn.danger:hover{border-color:var(--red);color:var(--red)}
+  .btn.sm{padding:5px 9px;font-size:12.5px}
+  .icon-btn{padding:8px;width:36px;height:36px;justify-content:center}
+
+  main{max-width:1100px;margin:0 auto;padding:22px 18px}
+
+  /* ---- Empty state ---- */
+  .empty{
+    text-align:center;padding:80px 20px;color:var(--muted);
+  }
+  .empty h2{font-size:24px;color:var(--text);margin-bottom:8px}
+  .empty p{margin-bottom:22px;max-width:420px;margin-left:auto;margin-right:auto}
+
+  /* ---- Sub bar ---- */
+  .subbar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .subbar .title-block h1{font-size:22px}
+  .subbar .title-block .club{color:var(--muted);font-size:12.5px;font-family:'JetBrains Mono';margin-top:2px}
+  select.season-pick{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:7px 11px;border-radius:8px;
+  }
+
+  /* ---- Summary strip ---- */
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    padding:13px 15px;position:relative;overflow:hidden;
+  }
+  .card .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+  .card .tag{width:7px;height:7px;border-radius:2px}
+  .card .who{font-family:'Space Grotesk';font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .val{font-family:'JetBrains Mono';font-weight:700;font-size:20px;margin-top:3px}
+  .card .val small{font-size:12px;color:var(--muted);font-weight:400}
+
+  /* ---- Table ---- */
+  .tablewrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+  .tbar{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+  .tbar .left{display:flex;align-items:center;gap:8px}
+  .tbar h3{font-size:14px}
+  .tbar .count{color:var(--muted);font-size:12px;font-family:'JetBrains Mono'}
+  .filterbox{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;width:170px}
+
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  th{
+    font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+    font-weight:600;cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;
+    background:var(--surface2);
+  }
+  th.num,td.num{text-align:center}
+  th:hover{color:var(--text)}
+  th .arrow{opacity:.5;font-size:9px}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--surface2)}
+  .pos-pill{
+    display:inline-block;min-width:34px;text-align:center;
+    font-family:'JetBrains Mono';font-size:11px;font-weight:700;
+    padding:2px 6px;border-radius:5px;
+  }
+  .num-input{
+    width:58px;background:var(--surface2);border:1px solid var(--border);
+    color:var(--text);text-align:center;padding:5px 4px;border-radius:6px;
+    font-family:'JetBrains Mono';font-weight:500;
+  }
+  .num-input:focus{outline:none;border-color:var(--accent)}
+  .ga{font-family:'JetBrains Mono';font-weight:700;color:var(--green)}
+  .ratio{font-family:'JetBrains Mono';color:var(--muted)}
+  .pname{font-weight:500;font-family:'Space Grotesk'}
+  .jersey{font-family:'JetBrains Mono';color:var(--muted);font-size:12px;margin-right:8px}
+  .rank{font-family:'JetBrains Mono';color:var(--muted2);font-size:12px;width:22px}
+  .del-row{color:var(--muted2);padding:5px}
+  .del-row:hover{color:var(--red)}
+
+  .flagrow td{text-align:center;color:var(--muted);padding:26px}
+
+  /* ---- Modal ---- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .modal{
+    background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+    width:100%;max-width:440px;max-height:88vh;overflow:auto;
+  }
+  .modal-head{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .modal-head h3{font-size:16px}
+  .modal-body{padding:18px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin-bottom:6px}
+  .field input,.field select{
+    width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:9px 11px;border-radius:8px;
+  }
+  .field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-foot{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+
+  /* roster manage list */
+  .roster-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+  .roster-item:last-child{border-bottom:none}
+  .roster-item .pos-pill{flex-shrink:0}
+  .roster-item .nm{flex:1;font-family:'Space Grotesk';font-weight:500}
+  .roster-item .jn{font-family:'JetBrains Mono';color:var(--muted);font-size:12px}
+
+  .hint{font-size:12px;color:var(--muted);margin-top:4px}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--surface3);border:1px solid var(--border2);
+    padding:10px 18px;border-radius:10px;z-index:99;font-size:13px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+
+  @media(max-width:760px){
+    .summary{grid-template-columns:repeat(2,1fr)}
+    .filterbox{width:130px}
+    main{padding:16px 12px}
+    th,td{padding:8px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span class="dot"></span> FC26 Tracker <small>CONTRIBUTIONS</small></div>
+  <div class="spacer"></div>
+  <select class="career-pick" id="careerPick"></select>
+  <button class="btn primary sm" id="newCareerBtn">+ Career</button>
+  <button class="btn icon-btn" id="menuBtn" title="Menu">⋯</button>
+</header>
+
+<main id="app"></main>
+
+<!-- hidden file input for import -->
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<script>
+/* ============================================================
+   STATE & PERSISTENCE
+   Data model:
+   db = {
+     careers: [{
+       id, name, club, seasons:[{id,name}],
+       players:[{id,name,pos,number}],
+       stats:{ [seasonId]: { [playerId]: {g,a,apps} } }
+     }],
+     activeCareer, activeSeasonByCareer:{[careerId]:seasonId}
+   }
+============================================================ */
+const KEY='fc26_tracker_v1';
+const POSITIONS=['GK','RB','LB','CB','RWB','LWB','CDM','CM','CAM','RM','LM','RW','LW','CF','ST'];
+const POS_COLOR={GK:'#ffc94d',RB:'#4da8ff',LB:'#4da8ff',CB:'#4da8ff',RWB:'#4dc8ff',LWB:'#4dc8ff',
+  CDM:'#3ddc84',CM:'#3ddc84',CAM:'#3ddc84',RM:'#a98cff',LM:'#a98cff',RW:'#ff6a1a',LW:'#ff6a1a',CF:'#ff6a1a',ST:'#ff6a1a'};
+
+let db=load();
+let sort={key:'ga',dir:-1};
+let filter='';
+
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.careers)return d;}catch(e){}
+  return {careers:[],activeCareer:null,activeSeasonByCareer:{}};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function uid(){return Math.random().toString(36).slice(2,9)}
+
+/* ---- accessors ---- */
+function activeCareer(){return db.careers.find(c=>c.id===db.activeCareer)||null}
+function activeSeasonId(){const c=activeCareer();if(!c)return null;return db.activeSeasonByCareer[c.id]||(c.seasons[0]&&c.seasons[0].id)||null}
+function statFor(c,sid,pid){
+  c.stats[sid]=c.stats[sid]||{};
+  c.stats[sid][pid]=c.stats[sid][pid]||{g:0,a:0,apps:0};
+  return c.stats[sid][pid];
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+function render(){
+  renderCareerPick();
+  const c=activeCareer();
+  const app=document.getElementById('app');
+  if(!c){
+    app.innerHTML=`<div class="empty">
+      <h2>Belum ada Career Mode</h2>
+      <p>Buat career mode baru untuk mulai mendata kontribusi gol & assist tiap pemain per musim.</p>
+      <button class="btn primary" onclick="openCareerModal()">+ Buat Career Mode</button>
+    </div>`;
+    return;
+  }
+  if(c.seasons.length===0){
+    app.innerHTML=subbarHTML(c)+`<div class="empty">
+      <h2>Belum ada season</h2>
+      <p>Tambahkan season untuk mulai input statistik pemain.</p>
+      <button class="btn primary" onclick="openSeasonModal()">+ Tambah Season</button>
+    </div>`;
+    return;
+  }
+  const sid=activeSeasonId();
+  app.innerHTML=subbarHTML(c)+summaryHTML(c,sid)+tableHTML(c,sid);
+}
+
+function renderCareerPick(){
+  const sel=document.getElementById('careerPick');
+  if(db.careers.length===0){sel.innerHTML=`<option>— no career —</option>`;sel.disabled=true;return}
+  sel.disabled=false;
+  sel.innerHTML=db.careers.map(c=>`<option value="${c.id}" ${c.id===db.activeCareer?'selected':''}>${esc(c.name)}</option>`).join('');
+}
+
+function subbarHTML(c){
+  const sid=activeSeasonId();
+  return `<div class="subbar">
+    <div class="title-block">
+      <h1>${esc(c.name)}</h1>
+      <div class="club">${esc(c.club||'—')} · ${c.players.length} pemain</div>
+    </div>
+    <div class="spacer"></div>
+    <select class="season-pick" onchange="setSeason(this.value)">
+      ${c.seasons.map(s=>`<option value="${s.id}" ${s.id===sid?'selected':''}>${esc(s.name)}</option>`).join('')}
+    </select>
+    <button class="btn sm" onclick="openSeasonModal()">+ Season</button>
+    <button class="btn sm" onclick="openRosterModal()">⚙ Roster</button>
+  </div>`;
+}
+
+function summaryHTML(c,sid){
+  const rows=c.players.map(p=>({p,s:statFor(c,sid,p.id)}));
+  const topG=best(rows,r=>r.s.g);
+  const topA=best(rows,r=>r.s.a);
+  const topGA=best(rows,r=>r.s.g+r.s.a);
+  const totG=rows.reduce((t,r)=>t+r.s.g,0);
+  const totA=rows.reduce((t,r)=>t+r.s.a,0);
+  const card=(lbl,color,who,val,sub)=>`<div class="card">
+    <div class="lbl"><span class="tag" style="background:${color}"></span>${lbl}</div>
+    <div class="who">${who}</div>
+    <div class="val">${val} ${sub?`<small>${sub}</small>`:''}</div>
+  </div>`;
+  return `<div class="summary">
+    ${card('Top Scorer','var(--accent)',topG?esc(topG.p.name):'—',topG?topG.s.g:0,'gol')}
+    ${card('Top Assist','#a98cff',topA?esc(topA.p.name):'—',topA?topA.s.a:0,'assist')}
+    ${card('Top Contributor','var(--green)',topGA?esc(topGA.p.name):'—',topGA?(topGA.s.g+topGA.s.a):0,'G+A')}
+    ${card('Team Total','var(--gold)','Goals & Assists',`${totG}<small>G</small> / ${totA}<small>A</small>`,'')}
+  </div>`;
+}
+
+function tableHTML(c,sid){
+  let rows=c.players.map(p=>{
+    const s=statFor(c,sid,p.id);
+    const ga=s.g+s.a;
+    const per=s.apps>0?(ga/s.apps):0;
+    return {p,g:s.g,a:s.a,apps:s.apps,ga,per};
+  });
+  if(filter){const f=filter.toLowerCase();rows=rows.filter(r=>r.p.name.toLowerCase().includes(f)||r.p.pos.toLowerCase().includes(f))}
+  rows.sort((x,y)=>{
+    let xv,yv;
+    if(sort.key==='name'){xv=x.p.name.toLowerCase();yv=y.p.name.toLowerCase();return xv<yv?-sort.dir:xv>yv?sort.dir:0}
+    if(sort.key==='pos'){xv=POSITIONS.indexOf(x.p.pos);yv=POSITIONS.indexOf(y.p.pos)}
+    else if(sort.key==='number'){xv=x.p.number||999;yv=y.p.number||999}
+    else {xv=x[sort.key];yv=y[sort.key]}
+    return (xv-yv)*sort.dir;
+  });
+
+  const arrow=k=>sort.key===k?`<span class="arrow">${sort.dir>0?'▲':'▼'}</span>`:'';
+  const th=(k,lbl,cls='')=>`<th class="${cls}" onclick="setSort('${k}')">${lbl} ${arrow(k)}</th>`;
+
+  const body = c.players.length===0
+    ? `<tr class="flagrow"><td colspan="9">Belum ada pemain. Klik <b>⚙ Roster</b> untuk menambah pemain.</td></tr>`
+    : rows.map((r,i)=>`<tr>
+        <td class="rank">${i+1}</td>
+        <td><span class="pos-pill" style="background:${POS_COLOR[r.p.pos]||'#666'}22;color:${POS_COLOR[r.p.pos]||'#999'}">${r.p.pos}</span></td>
+        <td class="pname"><span class="jersey">#${r.p.number||'-'}</span>${esc(r.p.name)}</td>
+        <td class="num"><input class="num-input" type="number" min="0" value="${r.g}" onchange="upd('${r.p.id}','g',this.value)"></td>
+        <td class="num"><input class="num-input" type="number" min="0" value="${r.a}" onchange="upd('${r.p.id}','a',this.value)"></td>
+        <td class="num"><input class="num-input" type="number" min="0" value="${r.apps}" onchange="upd('${r.p.id}','apps',this.value)"></td>
+        <td class="num ga">${r.ga}</td>
+        <td class="num ratio">${r.apps>0?r.per.toFixed(2):'—'}</td>
+        <td class="num"><button class="del-row" title="Hapus pemain (transfer)" onclick="removePlayer('${r.p.id}')">✕</button></td>
+      </tr>`).join('');
+
+  return `<div class="tablewrap">
+    <div class="tbar">
+      <div class="left"><h3>Statistik Pemain</h3><span class="count">${rows.length} baris</span></div>
+      <input class="filterbox" placeholder="Cari nama / posisi…" value="${esc(filter)}" oninput="setFilter(this.value)">
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>#</th>
+        ${th('pos','Pos')}
+        ${th('name','Pemain')}
+        ${th('g','G','num')}
+        ${th('a','A','num')}
+        ${th('apps','Apps','num')}
+        ${th('ga','G+A','num')}
+        ${th('per','/Game','num')}
+        <th class="num"></th>
+      </tr></thead>
+      <tbody>${body}</tbody>
+    </table>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   ACTIONS
+============================================================ */
+function setSeason(sid){const c=activeCareer();db.activeSeasonByCareer[c.id]=sid;save();render()}
+function setSort(k){if(sort.key===k)sort.dir*=-1;else{sort={key:k,dir:(k==='name'||k==='pos'||k==='number')?1:-1}}render()}
+function setFilter(v){filter=v;const c=activeCareer();const sid=activeSeasonId();document.querySelector('.tablewrap').outerHTML=tableHTML(c,sid);bindFilterFocus()}
+function bindFilterFocus(){const f=document.querySelector('.filterbox');if(f){f.focus();f.setSelectionRange(f.value.length,f.value.length)}}
+
+function upd(pid,field,val){
+  const c=activeCareer();const sid=activeSeasonId();
+  const s=statFor(c,sid,pid);
+  s[field]=Math.max(0,parseInt(val)||0);
+  save();
+  // re-render summary + table but keep no focus jump for inline edit
+  const app=document.getElementById('app');
+  app.querySelector('.summary').outerHTML=summaryHTML(c,sid);
+  document.querySelector('.tablewrap').outerHTML=tableHTML(c,sid);
+}
+
+function removePlayer(pid){
+  const c=activeCareer();
+  const p=c.players.find(x=>x.id===pid);
+  if(!confirm(`Hapus ${p.name} dari roster? Statistik di semua season juga terhapus.`))return;
+  c.players=c.players.filter(x=>x.id!==pid);
+  Object.keys(c.stats).forEach(sid=>{if(c.stats[sid])delete c.stats[sid][pid]});
+  save();render();toast(`${p.name} dihapus`);
+}
+
+document.getElementById('careerPick').onchange=e=>{db.activeCareer=e.target.value;save();render()};
+document.getElementById('newCareerBtn').onclick=()=>openCareerModal();
+
+/* ---- Career modal ---- */
+function openCareerModal(){
+  modal(`<div class="modal-head"><h3>Career Mode Baru</h3><button class="btn ghost icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nama Career</label><input id="m_cname" placeholder="Venezia Project"></div>
+      <div class="field"><label>Klub</label><input id="m_club" placeholder="Venezia FC"></div>
+      <div class="field"><label>Season Pertama</label><input id="m_season" placeholder="2029/2030"></div>
+      <p class="hint">Pemain ditambahkan lewat menu Roster setelah career dibuat.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeModal()">Batal</button>
+      <button class="btn primary" onclick="createCareer()">Buat</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('m_cname').focus(),50);
+}
+function createCareer(){
+  const name=val('m_cname')||'Career Baru';
+  const club=val('m_club');
+  const season=val('m_season')||'Season 1';
+  const sid=uid();
+  const c={id:uid(),name,club,seasons:[{id:sid,name:season}],players:[],stats:{}};
+  db.careers.push(c);db.activeCareer=c.id;db.activeSeasonByCareer[c.id]=sid;
+  save();closeModal();render();toast('Career dibuat');
+}
+
+/* ---- Season modal ---- */
+function openSeasonModal(){
+  modal(`<div class="modal-head"><h3>Tambah Season</h3><button class="btn ghost icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nama Season</label><input id="m_sname" placeholder="2030/2031"></div>
+      <p class="hint">Roster pemain otomatis ikut. Statistik dimulai dari 0 untuk season ini.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeModal()">Batal</button>
+      <button class="btn primary" onclick="createSeason()">Tambah</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('m_sname').focus(),50);
+}
+function createSeason(){
+  const c=activeCareer();const name=val('m_sname')||('Season '+(c.seasons.length+1));
+  const sid=uid();c.seasons.push({id:sid,name});db.activeSeasonByCareer[c.id]=sid;
+  save();closeModal();render();toast('Season ditambahkan');
+}
+
+/* ---- Roster modal ---- */
+function openRosterModal(){
+  const c=activeCareer();
+  modal(`<div class="modal-head"><h3>Kelola Roster</h3><button class="btn ghost icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="row2">
+        <div class="field" style="margin-bottom:8px"><label>Nama Pemain</label><input id="r_name" placeholder="Luka Vušković"></div>
+        <div class="field" style="margin-bottom:8px"><label>No</label><input id="r_num" type="number" placeholder="3"></div>
+      </div>
+      <div class="field"><label>Posisi</label>
+        <select id="r_pos">${POSITIONS.map(p=>`<option ${p==='CM'?'selected':''}>${p}</option>`).join('')}</select>
+      </div>
+      <button class="btn primary sm" style="width:100%" onclick="addPlayer()">+ Tambah Pemain</button>
+      <div style="margin-top:16px" id="rosterList">${rosterListHTML(c)}</div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal();render()">Selesai</button></div>`);
+  setTimeout(()=>document.getElementById('r_name').focus(),50);
+}
+function rosterListHTML(c){
+  if(c.players.length===0)return `<p class="hint">Belum ada pemain.</p>`;
+  return c.players.map(p=>`<div class="roster-item">
+    <span class="pos-pill" style="background:${POS_COLOR[p.pos]||'#666'}22;color:${POS_COLOR[p.pos]||'#999'}">${p.pos}</span>
+    <span class="nm">${esc(p.name)}</span>
+    <span class="jn">#${p.number||'-'}</span>
+    <button class="del-row" onclick="removePlayer('${p.id}');refreshRoster()">✕</button>
+  </div>`).join('');
+}
+function refreshRoster(){const c=activeCareer();const el=document.getElementById('rosterList');if(el)el.innerHTML=rosterListHTML(c)}
+function addPlayer(){
+  const c=activeCareer();
+  const name=val('r_name');if(!name){toast('Nama wajib diisi');return}
+  const num=parseInt(val('r_num'))||null;
+  const pos=val('r_pos');
+  c.players.push({id:uid(),name,pos,number:num});
+  save();
+  document.getElementById('r_name').value='';document.getElementById('r_num').value='';
+  document.getElementById('r_name').focus();
+  refreshRoster();
+}
+
+/* ---- Menu (export/import/delete) ---- */
+document.getElementById('menuBtn').onclick=()=>{
+  const c=activeCareer();
+  modal(`<div class="modal-head"><h3>Menu</h3><button class="btn ghost icon-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn" onclick="exportData()">⬇ Export Backup (JSON)</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Import Backup</button>
+      ${c?`<button class="btn danger" onclick="deleteCareer()">🗑 Hapus Career «${esc(c.name)}»</button>`:''}
+      <p class="hint">Data disimpan di browser ini (localStorage). Export rutin untuk cadangan.</p>
+    </div>`);
+};
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='fc26_tracker_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  toast('Backup di-export');
+}
+document.getElementById('importFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{const d=JSON.parse(rd.result);if(!d.careers)throw 0;db=d;save();closeModal();render();toast('Backup di-import')}catch(_){toast('File tidak valid')}};
+  rd.readAsText(f);e.target.value='';
+};
+function deleteCareer(){
+  const c=activeCareer();if(!confirm(`Hapus career «${c.name}» beserta semua datanya?`))return;
+  db.careers=db.careers.filter(x=>x.id!==c.id);
+  db.activeCareer=db.careers[0]?db.careers[0].id:null;
+  save();closeModal();render();toast('Career dihapus');
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function best(rows,fn){let b=null,bv=-1;rows.forEach(r=>{const v=fn(r);if(v>bv&&v>0){bv=v;b=r}});return b}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
+function val(id){const e=document.getElementById(id);return e?e.value.trim():''}
+function modal(html){closeModal();const o=document.createElement('div');o.className='overlay';o.id='overlay';o.onclick=e=>{if(e.target===o)closeModal()};const m=document.createElement('div');m.className='modal';m.innerHTML=html;o.appendChild(m);document.body.appendChild(o)}
+function closeModal(){const o=document.getElementById('overlay');if(o)o.remove()}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+render();
+</script>
+</body>
+</html>
